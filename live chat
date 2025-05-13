@@ -1,0 +1,139 @@
+import React, { useState } from 'react';
+import { MessageCircle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Avatar } from '@/components/ui/avatar';
+import { useToast } from '@/hooks/use-toast';
+
+interface Message {
+  id: string;
+  text: string;
+  sender: 'user' | 'agent';
+  timestamp: Date;
+}
+
+export function LiveChat() {
+  const [isOpen, setIsOpen] = useState(false);
+  const [messages, setMessages] = useState<Message[]>([
+    {
+      id: '1',
+      text: 'Hello! How can I help you with your mortgage questions today?',
+      sender: 'agent',
+      timestamp: new Date()
+    }
+  ]);
+  const [inputMessage, setInputMessage] = useState('');
+  const { toast } = useToast();
+
+  const toggleChat = () => {
+    setIsOpen(!isOpen);
+  };
+
+  const sendMessage = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (inputMessage.trim() === '') return;
+    
+    // Add user message
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      text: inputMessage,
+      sender: 'user',
+      timestamp: new Date()
+    };
+    
+    setMessages([...messages, userMessage]);
+    setInputMessage('');
+    
+    // Simulate agent response after a short delay
+    setTimeout(() => {
+      const responses = [
+        "Thanks for your message! A mortgage specialist will get back to you shortly.",
+        "I understand you have questions about mortgages. Let me find someone who can help you.",
+        "Great question! Our team is reviewing your inquiry and will respond soon.",
+        "Thank you for reaching out. We typically respond within 1 hour during business hours."
+      ];
+      
+      const agentMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        text: responses[Math.floor(Math.random() * responses.length)],
+        sender: 'agent',
+        timestamp: new Date()
+      };
+      
+      setMessages(prevMessages => [...prevMessages, agentMessage]);
+    }, 1000);
+  };
+
+  return (
+    <>
+      {isOpen && (
+        <Card className="fixed bottom-20 right-6 w-80 md:w-96 z-50 shadow-2xl rounded-2xl overflow-hidden flex flex-col dark:bg-dark-surface dark:glass-card">
+          <div className="bg-teal text-white p-3 flex justify-between items-center dark:bg-gradient-to-r dark:from-navy-800 dark:to-navy-900 dark:border-b dark:border-teal/20">
+            <h3 className="font-medium">Hotty Mortgage Chat Support</h3>
+            <Button variant="ghost" size="icon" onClick={toggleChat} className="text-white hover:bg-teal/50 dark:hover:bg-navy-900/50">
+              <span className="sr-only">Close chat</span>
+              &times;
+            </Button>
+          </div>
+          
+          <div className="flex-1 p-3 h-80 overflow-y-auto bg-white dark:bg-dark-surface">
+            {messages.map(message => (
+              <div 
+                key={message.id} 
+                className={`mb-3 flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+              >
+                {message.sender === 'agent' && (
+                  <Avatar className="h-8 w-8 mr-2 bg-teal text-white flex items-center justify-center rounded-full dark:bg-teal/80">
+                    <span className="text-xs font-bold">HM</span>
+                  </Avatar>
+                )}
+                <div
+                  className={`px-4 py-2 rounded-lg max-w-[80%] ${
+                    message.sender === 'user' 
+                      ? 'bg-teal/10 text-navy dark:bg-teal/20 dark:text-white' 
+                      : 'bg-navy/10 dark:bg-white/10'
+                  }`}
+                >
+                  <p className="text-sm">{message.text}</p>
+                  <p className="text-xs text-gray-500 mt-1 dark:text-gray-400">
+                    {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </p>
+                </div>
+                {message.sender === 'user' && (
+                  <Avatar className="h-8 w-8 ml-2 bg-navy text-white flex items-center justify-center rounded-full dark:bg-teal">
+                    <span className="text-xs font-bold">You</span>
+                  </Avatar>
+                )}
+              </div>
+            ))}
+          </div>
+          
+          <form onSubmit={sendMessage} className="p-3 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-dark-surface">
+            <div className="flex">
+              <Input
+                type="text"
+                placeholder="Type your message..."
+                value={inputMessage}
+                onChange={(e) => setInputMessage(e.target.value)}
+                className="flex-1 dark:bg-dark-highlight dark:border-gray-700 dark:text-white"
+              />
+              <Button type="submit" className="ml-2 bg-teal hover:bg-teal/90 text-white dark:bg-teal dark:hover:bg-teal/80 dark:glow-teal">
+                Send
+              </Button>
+            </div>
+          </form>
+        </Card>
+      )}
+      
+      <Button 
+        onClick={toggleChat}
+        className="fixed bottom-6 right-6 h-14 w-14 rounded-full bg-teal hover:bg-teal/90 text-white shadow-lg z-40 dark:animate-pulse-glow"
+      >
+        <MessageCircle size={24} />
+        <span className="sr-only">Open chat</span>
+      </Button>
+    </>
+  );
+}
